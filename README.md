@@ -74,17 +74,34 @@ El detalle completo está en la sección 16 del notebook.
 
 ## Cómo ejecutar el notebook
 
-Requiere **Python 3.12** (con Python 3.14 hay riesgo de que `scikit-learn`/`matplotlib` no tengan wheel disponible).
+Requiere **Python 3.12 o superior** (probado también en 3.14). Todas las dependencias del `requirements.txt` instalan con wheel precompilado en ambas versiones; no hace falta compilador.
 
 Las versiones exactas con las que se ejecutó el análisis están fijadas en [`requirements.txt`](requirements.txt) — las principales son `pandas 3.0.5`, `numpy 2.5.2`, `scikit-learn 1.9.0` y `matplotlib 3.11.1`.
+
+**Nota (macOS/Linux):** el `requirements.txt` incluye `pywinpty`, un paquete exclusivo de Windows (dependencia opcional de `terminado`) que no compila fuera de Windows. En Mac/Linux, quítalo de la instalación:
+
+```bash
+grep -v -i pywinpty requirements.txt > requirements_mac.txt
+```
+
+y usa `requirements_mac.txt` en el `pip install` de abajo.
 
 ```bash
 git clone https://github.com/JuanDiazPro/perfil-economico-municipios-mx.git
 cd perfil-economico-municipios-mx
+
+# Windows
 py -3.12 -m venv .venv
 .venv/Scripts/python -m pip install --upgrade pip
 .venv/Scripts/python -m pip install -r requirements.txt
 .venv/Scripts/python -m ipykernel install --user --name perfil-morelos --display-name "Python (perfil-morelos)"
+
+# macOS / Linux
+python3.12 -m venv .venv
+.venv/bin/pip install --upgrade pip
+grep -v -i pywinpty requirements.txt > requirements_mac.txt
+.venv/bin/pip install -r requirements_mac.txt
+.venv/bin/python -m ipykernel install --user --name perfil-morelos --display-name "Python (perfil-morelos)"
 ```
 
 El dataset original (`data/raw/dataset_original.csv`) ya está incluido en el repositorio, así que no requiere descarga adicional.
@@ -92,13 +109,21 @@ El dataset original (`data/raw/dataset_original.csv`) ya está incluido en el re
 Para ejecutar el notebook completo desde la terminal:
 
 ```bash
+# Windows
 .venv/Scripts/jupyter nbconvert --to notebook --execute --inplace notebook/analisis_datos_publicos.ipynb
+
+# macOS / Linux
+.venv/bin/jupyter nbconvert --to notebook --execute --inplace notebook/analisis_datos_publicos.ipynb
 ```
 
 O abrirlo con Jupyter Lab/Notebook y correrlo con el kernel **Python (perfil-morelos)**:
 
 ```bash
+# Windows
 .venv/Scripts/jupyter lab
+
+# macOS / Linux
+.venv/bin/jupyter lab
 ```
 
 ## Artículo técnico
