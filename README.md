@@ -128,5 +128,8 @@ O abrirlo con Jupyter Lab/Notebook y correrlo con el kernel **Python (perfil-mor
 
 ## Entregables y Artículo técnico
 
-- **Artículo técnico (Markdown):** [`articulo_tecnico.md`](articulo_tecnico.md) (~1,800 palabras).
-- **Artículo técnico (PDF maquetado):** [`articulo_tecnico.pdf`](articulo_tecnico.pdf).
+- **Artículo publicado en Hashnode:**
+  - [Publicación Principal (Hashnode)](https://perfil-morelos.hashnode.dev/perfil-econ-mico-morelos)
+  - [Espejo / Réplica 2 (Hashnode)](https://perfil-morelos2.hashnode.dev/perfil-econ-mico-morelos)
+- **Artículo técnico en el repositorio (Markdown):** [`articulo_tecnico.md`](articulo_tecnico.md) (~1,800 palabras).
+- **Artículo técnico descargable (PDF maquetado):** [`articulo_tecnico.pdf`](articulo_tecnico.pdf).
