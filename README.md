@@ -126,6 +126,9 @@ O abrirlo con Jupyter Lab/Notebook y correrlo con el kernel **Python (perfil-mor
 .venv/bin/jupyter lab
 ```
 
-## Artículo técnico
+## Entregables y Artículo técnico
 
-El artículo está en [`articulo_tecnico.md`](articulo_tecnico.md) (~1,800 palabras). Aún no se envía a publicación.
+- **Artículo técnico (Markdown):** [`articulo_tecnico.md`](articulo_tecnico.md) (~1,800 palabras).
+- **Artículo técnico (PDF maquetado):** [`articulo_tecnico.pdf`](articulo_tecnico.pdf).
+- **Guion para la defensa oral (5-7 min):** [`guion_defensa_oral.md`](guion_defensa_oral.md).
+
