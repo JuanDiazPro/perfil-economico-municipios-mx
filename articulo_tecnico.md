@@ -2,11 +2,11 @@
 
 **Autores**
 
-- García Quiroz, Gaspar Andrés - *[correo]* - *UTEZ*
+- García Quiroz, Gaspar Andrés - *20233tn107* - *UTEZ*
 - Contreras Cortés, César Emilio - *20233tn076* - *UTEZ*
-- Díaz Barroso, Juan José - *[correo]* - *UTEZ*
-- Jiménez Ureña, Ángel Sebastián - *[correo]* - *UTEZ*
-- Teja Carvajal, Erick Humberto - *[correo]* - *UTEZ*
+- Díaz Barroso, Juan José - *20233tn067* - *UTEZ*
+- Jiménez Ureña, Ángel Sebastián - *20233tn097* - *UTEZ*
+- Teja Carvajal, Erick Humberto - *20233tn060* - *UTEZ*
 
 Grupo 9A. Materia: Extracción de conocimiento de Bases de Datos.
 
