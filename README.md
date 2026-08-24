@@ -4,7 +4,7 @@
 
 - García Quiroz Gaspar Andrés
 - Contreras Cortés César Emilio
-- Días Barroso Juan José
+- Díaz Barroso Juan José
 - Jiménez Ureña Ángel Sebastián
 - Teja Carvajal Erick Humberto
 
@@ -101,6 +101,6 @@ O abrirlo con Jupyter Lab/Notebook y correrlo con el kernel **Python (perfil-mor
 .venv/Scripts/jupyter lab
 ```
 
-## Enlace al artículo técnico
+## Artículo técnico
 
-Pendiente, aun no está publicado.
+El artículo está en [`articulo_tecnico.md`](articulo_tecnico.md) (~1,800 palabras). Aún no se envía a publicación.
