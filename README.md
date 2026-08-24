@@ -29,6 +29,8 @@ Extracción de conocimiento de Bases de Datos
 - **Cobertura:** estado de Morelos (36 municipios)
 - **Fecha de descarga:** agosto de 2026
 
+La procedencia completa —ruta de descarga, checksums, columnas utilizadas, condiciones de uso y cita— está documentada en [`referencias/fuentes_datos.txt`](referencias/fuentes_datos.txt).
+
 ## Descripción breve del dataset
 
 El dataset original contiene **113,066 registros** (uno por unidad económica: cada establecimiento registrado en Morelos) y **42 columnas** en codificación `latin-1`, incluyendo domicilio, contacto, actividad económica (SCIAN), personal ocupado (en rangos), tipo de unidad económica y coordenadas geográficas.
@@ -55,14 +57,14 @@ Con `k = 4` (silhouette = 0.2074) se identificaron cuatro perfiles económicos m
 | 2 | 11 | Comercio al por mayor y manufactura ligera del oriente | Tetela del Volcán |
 | 3 | 7 | Consumo final: comercio al por menor y alojamiento/alimentos | Tlayacapan |
 
-El comercio al por menor domina en los 36 municipios sin excepción (28.8%–56.2%); lo que distingue a los grupos son diferencias de 1 a 3 puntos porcentuales en el resto de la composición, salvo el caso de Temoac, que se separa del resto por una desviación de +34.8 puntos en manufactura. Los detalles completos, gráficas y la interpretación de cada grupo están en el notebook.
+El comercio al por menor es el sector mayoritario en 35 de los 36 municipios (28.8%–56.2%); la única excepción es Temoac, donde lo desplaza la manufactura (45.3%). Lo que distingue a los grupos son diferencias de 1 a 3 puntos porcentuales en el resto de la composición, salvo el propio Temoac, que se separa por una desviación de +34.8 puntos en manufactura. Los detalles completos, gráficas y la interpretación de cada grupo están en el notebook.
 
 ## Limitaciones
 
 - El DENUE cuenta establecimientos, no producción, ingresos ni valor agregado.
 - `per_ocu` es un rango categórico; el tamaño promedio de unidad se estima con el punto medio de cada rango, no es empleo medido.
 - Solo 36 observaciones para 9 variables: el modelo es sensible a la escala y a la inicialización.
-- Las variables son composicionales (suman 100% por municipio) y por lo tanto no son independientes entre sí.
+- Las variables de composición son composicionales: los ocho grupos de sector suman 100% por municipio. Se excluyó `pct_otros_grupo` del modelo para reducir esa redundancia, pero la dependencia parcial entre las siete restantes permanece.
 - La silhouette obtenida (0.2074) indica una separación débil entre grupos.
 - Corte temporal único (DENUE 2026/06): es una fotografía, no permite hablar de tendencias.
 - No se incorporan población, superficie ni PIB municipal.
@@ -74,12 +76,14 @@ El detalle completo está en la sección 16 del notebook.
 
 Requiere **Python 3.12** (con Python 3.14 hay riesgo de que `scikit-learn`/`matplotlib` no tengan wheel disponible).
 
+Las versiones exactas con las que se ejecutó el análisis están fijadas en [`requirements.txt`](requirements.txt) — las principales son `pandas 3.0.5`, `numpy 2.5.2`, `scikit-learn 1.9.0` y `matplotlib 3.11.1`.
+
 ```bash
 git clone https://github.com/JuanDiazPro/perfil-economico-municipios-mx.git
 cd perfil-economico-municipios-mx
 py -3.12 -m venv .venv
 .venv/Scripts/python -m pip install --upgrade pip
-.venv/Scripts/python -m pip install pandas numpy matplotlib scikit-learn jupyter ipykernel nbconvert
+.venv/Scripts/python -m pip install -r requirements.txt
 .venv/Scripts/python -m ipykernel install --user --name perfil-morelos --display-name "Python (perfil-morelos)"
 ```
 

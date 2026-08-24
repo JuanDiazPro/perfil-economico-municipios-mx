@@ -1,0 +1,171 @@
+FUENTES DE DATOS
+Perfil economico de los municipios de Morelos por tipo de actividad
+
+Materia: Extraccion de conocimiento de Bases de Datos
+Grupo: 9A
+Equipo:
+  Garcia Quiroz Gaspar Andres
+  Contreras Cortes Cesar Emilio
+  Diaz Barroso Juan Jose
+  Jimenez Ureña Angel Sebastian
+  Teja Carvajal Erick Humberto
+
+Pregunta de investigacion:
+  ¿Que municipios del estado de Morelos comparten un perfil economico similar
+  segun la concentracion de sus unidades economicas dedicadas a la manufactura,
+  el comercio y los servicios?
+
+Este documento registra de donde salieron los datos del proyecto, como se
+obtuvieron y en que condiciones se pueden reutilizar. Se usa una sola fuente
+primaria; no se combinan datos de terceros.
+
+
+1. FUENTE PRIMARIA
+
+Nombre completo: DENUE - Directorio Estadistico Nacional de Unidades Economicas
+Institucion: INEGI - Instituto Nacional de Estadistica y Geografia
+Pais: Mexico
+Tipo de fuente: Datos abiertos oficiales / registro administrativo
+Corte o version: DENUE 2026/06 (reporte de junio de 2026)
+URL de descarga: https://www.inegi.org.mx/app/descarga/?ti=6
+Portal del DENUE: https://www.inegi.org.mx/app/mapa/denue/
+Formato original: CSV
+Codificacion: latin-1 (el DENUE no se distribuye en UTF-8)
+Fecha de descarga: agosto de 2026
+Incorporado al repositorio el: 2026-08-23
+
+Ruta de descarga seguida:
+  1. Entrar a https://www.inegi.org.mx/app/descarga/?ti=6
+  2. Seccion "Directorio Estadistico Nacional de Unidades Economicas (DENUE)"
+  3. Elegir el corte 2026/06
+  4. Seleccionar la entidad federativa 17 - Morelos
+  5. Descargar el archivo en formato CSV
+
+Cobertura:
+  Geografica: estado de Morelos (cve_ent = 17), sus 36 municipios completos
+  Temporal: corte unico, junio de 2026 (es una fotografia, no una serie)
+  Unidad de registro: un establecimiento (unidad economica) por fila
+
+¿Por que se considera confiable?
+  El DENUE es el directorio oficial de establecimientos del INEGI. Se construye
+  a partir de los Censos Economicos y se actualiza con recorridos de campo. Es
+  de acceso publico, gratuito y descargable en CSV, lo que hace que cualquier
+  persona pueda reproducir el analisis desde el origen.
+
+Limitacion que viene desde el origen:
+  El DENUE registra que un establecimiento existe y a que se dedica, pero no su
+  produccion, ingresos ni valor agregado. Tampoco captura bien la actividad
+  informal ambulante ni el trabajo desde el hogar. Esto acota las conclusiones a
+  la composicion estructural del mercado formal y se detalla en la seccion 16
+  del notebook.
+
+
+2. ARCHIVO DESCARGADO
+
+Ruta en el repositorio : data/raw/dataset_original.csv
+Tamaño                 : 60,564,782 bytes (57.8 MB)
+Registros              : 113,066 filas
+Variables              : 42 columnas
+Codificacion           : latin-1
+SHA-256                : b382d0bc1567caa254ad0b0eaa1d1534e9e468ef849bbe3e6f838b52ec321e2a
+
+El archivo se versiona en el repositorio a proposito, para que el notebook se
+pueda ejecutar sin volver a descargar nada del INEGI. El SHA-256 permite
+verificar que el archivo no se altero:
+
+Windows PowerShell: Get-FileHash data/raw/dataset_original.csv -Algorithm SHA256
+Linux / macOS: sha256sum data/raw/dataset_original.csv
+
+Variables originales efectivamente utilizadas (11 de las 42):
+  id           identificador unico de la unidad economica
+  codigo_act   codigo de actividad economica (SCIAN)
+  nombre_act   nombre de la actividad economica
+  per_ocu      rango de personal ocupado (variable categorica, no un conteo)
+  cve_ent      clave de la entidad federativa (17 = Morelos)
+  cve_mun      clave del municipio
+  municipio    nombre del municipio
+  entidad      nombre de la entidad federativa
+  tipoUniEco   tipo de unidad economica (Fijo / Semifijo)
+  latitud      latitud del establecimiento
+  longitud     longitud del establecimiento
+
+Las 31 columnas restantes (domicilio, telefono, correo, pagina web, numero
+exterior, etc.) se descartaron por ser datos de contacto o de localizacion
+postal que no aportan al perfil economico municipal, y que ademas concentran
+la mayor parte de los valores nulos del archivo por ser campos opcionales.
+
+
+3. CLASIFICACION UTILIZADA
+
+Nombre: SCIAN - Sistema de Clasificacion Industrial de America del Norte
+Institucion: INEGI
+URL: https://www.inegi.org.mx/app/scian/
+
+El SCIAN es jerarquico: los dos primeros digitos de codigo_act identifican el
+sector economico. El proyecto usa ese criterio para pasar de aproximadamente mil
+actividades distintas a 20 sectores comparables entre municipios, y despues
+agrupa esos 20 sectores en 8 grupos de trabajo. El mapeo completo esta escrito
+de forma explicita en el notebook (secciones 6 y 9) y no depende de ningun
+archivo externo.
+
+4. ARCHIVOS DERIVADOS
+
+Todos estos archivos los produce notebook/analisis_datos_publicos.ipynb a partir
+del archivo de la seccion 2. Se incluyen como evidencia del proceso; ninguno es
+un dato de entrada.
+
+  data/processed/dataset_limpio.csv
+      113,066 filas x 14 columnas, UTF-8, 19,306,850 bytes (18.4 MB)
+      SHA-256: 870ccfcac97027b203087b99f7a30a2980658914613cbc84d842b64990ea6027
+      Las 11 columnas conservadas mas 3 derivadas: sector_codigo, sector_nombre
+      y cve_geo (clave INEGI de 5 digitos = entidad + municipio).
+
+  outputs/matriz_municipio_sector.csv   36 municipios x 8 grupos, en conteos
+  outputs/variables_modelo.csv          36 x 9, las variables que entran a KMeans
+  outputs/metricas_k.csv                inercia y silhouette para k = 2 a 8
+  outputs/resultados_modelo.csv         cluster asignado a cada municipio
+  outputs/resumen_resultados.csv        perfil promedio de cada cluster
+  outputs/modelo/*.pkl                  modelo, escalador, columnas y reetiquetado
+  imagenes/grafica_1..6_*.png           las seis graficas del analisis
+
+
+5. CONDICIONES DE USO Y CITA
+
+La informacion del INEGI se publica bajo los Terminos de Libre Uso de la
+Informacion del INEGI, que permiten reproducirla y redistribuirla de forma libre
+y gratuita, con la condicion de citar la fuente.
+
+Terminos: https://www.inegi.org.mx/inegi/terminos.html
+
+Cita sugerida de la fuente:
+
+INEGI (2026). Directorio Estadistico Nacional de Unidades Economicas (DENUE),
+corte 2026/06, entidad 17 Morelos. Instituto Nacional de Estadistica y
+Geografia, Mexico. Recuperado en agosto de 2026 de
+https://www.inegi.org.mx/app/descarga/?ti=6
+
+Este proyecto es un trabajo academico sin fines de lucro. El INEGI no participo
+en el analisis ni avala sus conclusiones: la interpretacion de los resultados es
+responsabilidad exclusiva del equipo.
+
+
+6. FUENTES CONSIDERADAS Y NO UTILIZADAS
+
+Se dejan anotadas porque explican los limites del analisis y porque son el
+camino natural para continuarlo (ver "Trabajo futuro", seccion 17 del notebook):
+
+  - Poblacion municipal (Censo de Poblacion y Vivienda, INEGI). Permitiria
+    calcular unidades economicas per capita y distinguir tamaño de intensidad
+    economica. No se incorporo, por eso el analisis habla de composicion y no
+    de densidad economica ni de bienestar.
+
+  - PIB estatal y municipal (INEGI / IMCO). Habria permitido contrastar
+    composicion contra valor generado. No se incorporo.
+
+  - Cortes anteriores del DENUE. Permitirian pasar de una fotografia a una
+    tendencia y comprobar si los grupos son estables en el tiempo. El proyecto
+    usa un unico corte.
+
+
+
+Ultima actualizacion de este documento: 2026-08-24

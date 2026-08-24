@@ -7,3 +7,11 @@ __pycache__/
 
 # Jupyter
 .ipynb_checkpoints/
+
+# Nota: data/ NO se ignora a proposito.
+# dataset_original.csv (60 MB) y dataset_limpio.csv (19 MB) se versionan
+# deliberadamente para que el notebook sea reproducible sin volver a
+# descargar del INEGI. Ambos estan por debajo del limite de 100 MB de
+# GitHub, aunque el original supera el umbral de aviso de 50 MB.
+# La procedencia del archivo original esta documentada en
+# referencias/fuentes_datos.txt
