@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Morelos — mapa económico municipal</title>
+<style>
+  :root{
+    --bg:#f6f7f9; --panel:#ffffff; --tinta:#1c2530; --suave:#5d6b7a;
+    --borde:#dfe4ea; --acento:#4C72B0;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#12161c; --panel:#1a2029; --tinta:#e8edf3; --suave:#9aa7b5;
+           --borde:#2a323d; --acento:#6f9ad6; }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;padding:24px 16px 40px;background:var(--bg);color:var(--tinta);
+       font:15px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  .envoltura{max-width:1080px;margin:0 auto}
+  h1{font-size:1.5rem;margin:0 0 4px;letter-spacing:-.01em}
+  .sub{color:var(--suave);font-size:.92rem;margin:0 0 20px}
+  .panel{background:var(--panel);border:1px solid var(--borde);border-radius:12px;padding:18px}
+  .controles{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;margin-bottom:16px}
+  .campo{display:flex;flex-direction:column;gap:6px;min-width:230px;flex:1}
+  label{font-size:.78rem;text-transform:uppercase;letter-spacing:.06em;color:var(--suave);font-weight:600}
+  select{padding:9px 11px;border:1px solid var(--borde);border-radius:8px;background:var(--panel);
+         color:var(--tinta);font-size:.94rem;font-family:inherit}
+  select:focus{outline:2px solid var(--acento);outline-offset:1px}
+  .oculto{display:none}
+  .lienzo{position:relative;width:100%}
+  svg{display:block;width:100%;height:auto;overflow:visible}
+  canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+  path.mun{stroke:var(--panel);stroke-width:.6;transition:opacity .12s}
+  path.mun:hover{stroke:var(--tinta);stroke-width:1.4}
+  .leyenda{display:flex;flex-wrap:wrap;gap:14px;align-items:center;margin-top:16px;
+           padding-top:14px;border-top:1px solid var(--borde);font-size:.85rem}
+  .clave{display:flex;align-items:center;gap:7px}
+  .muestra{width:15px;height:15px;border-radius:4px;flex:none}
+  .rampa{height:13px;width:190px;border-radius:4px;border:1px solid var(--borde)}
+  .tip{position:fixed;pointer-events:none;z-index:9;background:var(--panel);color:var(--tinta);
+       border:1px solid var(--borde);border-radius:9px;padding:9px 12px;font-size:.85rem;
+       box-shadow:0 6px 24px rgba(0,0,0,.16);opacity:0;transition:opacity .1s;max-width:250px}
+  .tip b{display:block;font-size:.95rem;margin-bottom:3px}
+  .tip .cifra{color:var(--acento);font-weight:700}
+  .nota{color:var(--suave);font-size:.8rem;margin-top:16px;line-height:1.5}
+  .cargando{color:var(--suave);font-size:.85rem;padding:8px 0}
+</style>
+</head>
+<body>
+<div class="envoltura">
+  <h1>Morelos: el mapa económico de sus municipios</h1>
+  <p class="sub">Composición de unidades económicas por sector. Fuente: DENUE 2026/06 (INEGI).</p>
+
+  <div class="panel">
+    <div class="controles">
+      <div class="campo">
+        <label for="vista">Qué mostrar</label>
+        <select id="vista"></select>
+      </div>
+      <div class="campo oculto" id="campoSector">
+        <label for="sectorPuntos">Filtrar puntos por sector</label>
+        <select id="sectorPuntos"></select>
+      </div>
+    </div>
+
+    <div class="lienzo" id="lienzo">
+      <svg id="mapa" role="img" aria-label="Mapa de los municipios de Morelos"></svg>
+      <canvas id="capa"></canvas>
+    </div>
+
+    <div class="leyenda" id="leyenda"></div>
+  </div>
+
+  <p class="nota" id="nota"></p>
+</div>
+<div class="tip" id="tip"></div>
+
+<script>
+const D = /*__DATOS__*/;
+
+const COLOR_CLUSTER = ['#C44E52','#4C72B0','#55A868','#8172B2'];
+const NOMBRE_CLUSTER = [
+  'Grupo 0 — Manufactura (Temoac)',
+  'Grupo 1 — Servicios y cabeceras',
+  'Grupo 2 — Comercio de abasto',
+  'Grupo 3 — Consumo final'
+];
+// Rampa secuencial clara -> oscura, legible en ambos temas.
+const RAMPA = [[247,251,255],[198,219,239],[107,174,214],[33,113,181],[8,48,107]];
+
+function colorRampa(t){
+  t = Math.max(0, Math.min(1, t));
+  const p = t * (RAMPA.length - 1), i = Math.min(Math.floor(p), RAMPA.length - 2), f = p - i;
+  const a = RAMPA[i], b = RAMPA[i+1];
+  return `rgb(${Math.round(a[0]+(b[0]-a[0])*f)},${Math.round(a[1]+(b[1]-a[1])*f)},${Math.round(a[2]+(b[2]-a[2])*f)})`;
+}
+
+/* ---------- proyección ---------- */
+let LON0=180, LON1=-180, LAT0=90, LAT1=-90;
+for (const f of D.geo.features){
+  const anillos = f.geometry.type === 'Polygon' ? [f.geometry.coordinates] : f.geometry.coordinates;
+  for (const poly of anillos) for (const [x,y] of poly[0]){
+    if(x<LON0)LON0=x; if(x>LON1)LON1=x; if(y<LAT0)LAT0=y; if(y>LAT1)LAT1=y;
+  }
+}
+// Equirectangular: comprimimos la longitud por el coseno de la latitud media
+// para que el estado no salga estirado a lo ancho.
+const KX = Math.cos((LAT0+LAT1)/2 * Math.PI/180);
+const ANCHO = 1000;
+const ALTO  = Math.round(ANCHO * ((LAT1-LAT0) / ((LON1-LON0)*KX)));
+const projX = lon => (lon - LON0) * KX / ((LON1-LON0)*KX) * ANCHO;
+const projY = lat => ALTO - (lat - LAT0) / (LAT1-LAT0) * ALTO;
+
+const svg = document.getElementById('mapa');
+svg.setAttribute('viewBox', `0 0 ${ANCHO} ${ALTO}`);
+
+const rutas = {};
+for (const f of D.geo.features){
+  const anillos = f.geometry.type === 'Polygon' ? [f.geometry.coordinates] : f.geometry.coordinates;
+  let d = '';
+  for (const poly of anillos){
+    poly[0].forEach(([x,y],i)=>{ d += (i?'L':'M') + projX(x).toFixed(1) + ' ' + projY(y).toFixed(1); });
+    d += 'Z';
+  }
+  const p = document.createElementNS('http://www.w3.org/2000/svg','path');
+  p.setAttribute('d', d); p.setAttribute('class','mun');
+  p.dataset.mun = f.properties.municipio;
+  svg.appendChild(p);
+  rutas[f.properties.municipio] = p;
+}
+
+/* ---------- puntos ---------- */
+const P = D.puntos;
+const px = new Float32Array(P.n), py = new Float32Array(P.n), ps = new Uint8Array(P.n);
+for (let i=0;i<P.n;i++){
+  const x = parseInt(P.blob.substr(i*6,3),36), y = parseInt(P.blob.substr(i*6+3,3),36);
+  px[i] = projX(P.lon0 + x/P.esc);
+  py[i] = projY(P.lat0 + y/P.esc);
+  ps[i] = +P.sect[i];
+}
+
+const capa = document.getElementById('capa'), ctx = capa.getContext('2d');
+function pintarPuntos(filtro){
+  const caja = document.getElementById('lienzo').getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  capa.width = Math.round(caja.width*dpr); capa.height = Math.round(caja.height*dpr);
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,caja.width,caja.height);
+  if (filtro === null) return;
+  const k = caja.width / ANCHO;
+  // Puntos diminutos y translúcidos: donde se amontonan, el color se satura solo.
+  ctx.fillStyle = 'rgba(196,78,82,.42)';
+  const r = Math.max(.55, .9*k);
+  for (let i=0;i<P.n;i++){
+    if (filtro >= 0 && ps[i] !== filtro) continue;
+    ctx.beginPath(); ctx.arc(px[i]*k, py[i]*k, r, 0, 6.2832); ctx.fill();
+  }
+}
+function limpiarPuntos(){ ctx.clearRect(0,0,capa.width,capa.height); }
+
+/* ---------- controles ---------- */
+const selVista = document.getElementById('vista');
+selVista.appendChild(new Option('Grupos del modelo (clusters)','cluster'));
+for (const g of D.orden) selVista.appendChild(new Option('% ' + D.etiqueta[g], g));
+selVista.appendChild(new Option('Unidades económicas (puntos)','puntos'));
+
+const selSector = document.getElementById('sectorPuntos');
+selSector.appendChild(new Option('Todos los sectores','-1'));
+D.orden.forEach((g,i)=> selSector.appendChild(new Option(D.etiqueta[g], String(i))));
+
+const leyenda = document.getElementById('leyenda');
+const nota = document.getElementById('nota');
+const tip = document.getElementById('tip');
+let vistaActual = 'cluster';
+
+function render(){
+  const v = selVista.value; vistaActual = v;
+  document.getElementById('campoSector').classList.toggle('oculto', v !== 'puntos');
+  leyenda.innerHTML = '';
+
+  if (v === 'cluster'){
+    limpiarPuntos();
+    for (const m in rutas){ rutas[m].style.fill = COLOR_CLUSTER[D.mun[m].cluster]; rutas[m].style.opacity = 1; }
+    NOMBRE_CLUSTER.forEach((n,i)=>{
+      leyenda.insertAdjacentHTML('beforeend',
+        `<span class="clave"><span class="muestra" style="background:${COLOR_CLUSTER[i]}"></span>${n}</span>`);
+    });
+    nota.textContent = 'Cada municipio pintado según el grupo que le asignó K-medias. Los cuatro grupos se formaron con la composición sectorial y la estructura de los establecimientos, nunca con la ubicación geográfica: la contigüidad que se observa es un resultado, no un supuesto del modelo.';
+
+  } else if (v === 'puntos'){
+    for (const m in rutas){ rutas[m].style.fill = 'transparent'; rutas[m].style.opacity = 1; }
+    const f = parseInt(selSector.value, 10);
+    pintarPuntos(f);
+    const cuantos = f < 0 ? P.n : ps.reduce((a,s)=> a + (s===f?1:0), 0);
+    leyenda.insertAdjacentHTML('beforeend',
+      `<span class="clave"><span class="muestra" style="background:rgba(196,78,82,.6)"></span>
+       Una unidad económica${f<0?'':' de ' + D.etiqueta[D.orden[f]].toLowerCase()} — ${cuantos.toLocaleString('es-MX')} puntos</span>`);
+    nota.textContent = 'Cada punto es un establecimiento en su latitud y longitud reales. Donde los puntos se enciman el color se satura, así que las manchas más intensas son los centros urbanos, mercados y corredores comerciales. Es la misma información del mapa de colores, pero sin promediar por municipio.';
+
+  } else {
+    limpiarPuntos();
+    const vals = Object.values(D.mun).map(o => o.pct[v]);
+    const min = Math.min(...vals), max = Math.max(...vals);
+    for (const m in rutas){
+      rutas[m].style.fill = colorRampa((D.mun[m].pct[v] - min) / (max - min || 1));
+      rutas[m].style.opacity = 1;
+    }
+    const tramos = RAMPA.map((_,i)=> colorRampa(i/(RAMPA.length-1))).join(',');
+    leyenda.insertAdjacentHTML('beforeend',
+      `<span class="clave">${min.toFixed(1)}%</span>
+       <span class="rampa" style="background:linear-gradient(90deg,${tramos})"></span>
+       <span class="clave">${max.toFixed(1)}%</span>
+       <span class="clave" style="color:var(--suave)">porcentaje de unidades económicas en ${D.etiqueta[v].toLowerCase()}</span>`);
+    nota.textContent = 'La escala va del municipio con menor porcentaje al de mayor porcentaje en este sector, no de 0 a 100. Se usan porcentajes y no conteos para que el mapa muestre el perfil del municipio y no simplemente su tamaño: si no, Cuernavaca dominaría todos los sectores.';
+  }
+}
+
+/* ---------- interacción ---------- */
+svg.addEventListener('mousemove', e => {
+  const t = e.target;
+  if (!t.dataset || !t.dataset.mun){ tip.style.opacity = 0; return; }
+  const m = t.dataset.mun, o = D.mun[m];
+  let cuerpo;
+  if (vistaActual === 'cluster' || vistaActual === 'puntos'){
+    cuerpo = `${NOMBRE_CLUSTER[o.cluster]}<br>${o.total.toLocaleString('es-MX')} unidades económicas`;
+  } else {
+    cuerpo = `<span class="cifra">${o.pct[vistaActual].toFixed(1)}%</span> en ${D.etiqueta[vistaActual].toLowerCase()}<br>${o.total.toLocaleString('es-MX')} unidades económicas`;
+  }
+  tip.innerHTML = `<b>${m}</b>${cuerpo}`;
+  tip.style.opacity = 1;
+  const c = tip.getBoundingClientRect();
+  tip.style.left = Math.min(e.clientX + 14, innerWidth - c.width - 8) + 'px';
+  tip.style.top  = Math.max(8, e.clientY - c.height - 12) + 'px';
+});
+svg.addEventListener('mouseleave', ()=> tip.style.opacity = 0);
+
+selVista.addEventListener('change', render);
+selSector.addEventListener('change', render);
+addEventListener('resize', ()=>{ if (vistaActual === 'puntos') pintarPuntos(parseInt(selSector.value,10)); });
+
+render();
+</script>
+</body>
+</html>

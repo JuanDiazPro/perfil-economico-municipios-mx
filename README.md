@@ -44,6 +44,7 @@ Tras la limpieza se conservan **11 columnas relevantes** y se agregan variables 
 - **Escalado:** `StandardScaler` sobre las 9 variables del modelo.
 - **Modelo no supervisado:** `KMeans`, con selección de `k` mediante el método del codo (inercia) y el coeficiente de `silhouette`.
 - **Visualización:** `PCA` a 2 componentes, únicamente para proyectar y comunicar el resultado del agrupamiento (el modelo se ajusta sobre las 9 variables originales, no sobre los componentes).
+- **Mapas:** polígonos municipales de OpenStreetMap (Overpass API), simplificados con Ramer-Douglas-Peucker de 33,186 a 5,942 vértices. Se usó esta fuente y no otra porque es la que ya incluye los 36 municipios: Xoxocotla, Coatetelco y Hueyapan se crearon en 2017 y muchos archivos de uso común aún traen 33.
 - **Persistencia del modelo:** guardado con `joblib` del modelo, el escalador, las variables usadas y el reetiquetado de clusters, con una prueba de recarga que verifica la reproducibilidad.
 
 ## Principales resultados
@@ -58,6 +59,16 @@ Con `k = 4` (silhouette = 0.2074) se identificaron cuatro perfiles económicos m
 | 3 | 7 | Consumo final: comercio al por menor y alojamiento/alimentos | Tlayacapan |
 
 El comercio al por menor es el sector mayoritario en 35 de los 36 municipios (28.8%–56.2%); la única excepción es Temoac, donde lo desplaza la manufactura (45.3%). Lo que distingue a los grupos son diferencias de 1 a 3 puntos porcentuales en el resto de la composición, salvo el propio Temoac, que se separa por una desviación de +34.8 puntos en manufactura. Los detalles completos, gráficas y la interpretación de cada grupo están en el notebook.
+
+## Mapa interactivo
+
+`outputs/mapa_interactivo.html` es un archivo independiente: se abre con doble clic, sin servidor, sin internet y sin librerías externas. Permite:
+
+- ver los **cuatro grupos del modelo** sobre el mapa del estado;
+- elegir cualquiera de los **ocho sectores** y repintar los municipios según su porcentaje de unidades económicas en ese sector;
+- activar una capa con los **113,062 establecimientos** dibujados en su latitud y longitud reales, filtrable por sector, donde la saturación del color revela centros urbanos, mercados y corredores comerciales.
+
+Al construir esa capa se detectaron **4 registros del DENUE con coordenadas fuera de Morelos** (uno de Jojutla aparece en Baja California Sur). Son errores de captura de la fuente; no afectan al modelo, que nunca usa coordenadas, y se excluyen solo del mapa. El detalle está en [`referencias/fuentes_datos.txt`](referencias/fuentes_datos.txt).
 
 ## Limitaciones
 

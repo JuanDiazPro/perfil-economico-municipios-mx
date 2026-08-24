@@ -16,8 +16,9 @@ Pregunta de investigacion:
   el comercio y los servicios?
 
 Este documento registra de donde salieron los datos del proyecto, como se
-obtuvieron y en que condiciones se pueden reutilizar. Se usa una sola fuente
-primaria; no se combinan datos de terceros.
+obtuvieron y en que condiciones se pueden reutilizar. El analisis usa una sola
+fuente primaria, el DENUE. La unica fuente adicional es la geometria de los
+mapas (seccion 4), que sirve para dibujar y no interviene en el modelo.
 
 
 1. FUENTE PRIMARIA
@@ -108,7 +109,48 @@ agrupa esos 20 sectores en 8 grupos de trabajo. El mapeo completo esta escrito
 de forma explicita en el notebook (secciones 6 y 9) y no depende de ningun
 archivo externo.
 
-4. ARCHIVOS DERIVADOS
+4. GEOMETRIA DE LOS MUNICIPIOS (fuente secundaria, solo para los mapas)
+
+Nombre: Limites administrativos municipales de Morelos (admin_level=6)
+Fuente: OpenStreetMap, extraidos con la Overpass API
+URL de consulta: https://overpass-api.de/api/interpreter
+Fecha de descarga: agosto de 2026
+Archivo generado: data/geo/morelos_municipios.geojson
+Tamano: 128,117 bytes (125 KB)
+SHA-256: 0ddbe78c5fe8a7d23c8146b072ddeeac0e40a55d63b891e414c96f454e5b0903
+Licencia: Open Database License (ODbL) 1.0
+  https://www.openstreetmap.org/copyright
+
+Por que OpenStreetMap y no el INEGI:
+  Morelos creo tres municipios en 2017 (Xoxocotla, Coatetelco y Hueyapan), que se
+  separaron de Puente de Ixtla, Miacatlan y Tetela del Volcan. Varios archivos
+  GeoJSON de uso comun siguen trayendo los 33 municipios anteriores, y con ellos
+  tres de los municipios del analisis se quedarian sin poligono. OpenStreetMap ya
+  tiene los 36, que es lo que exige este proyecto.
+
+Procesamiento aplicado:
+  1. Las vias exteriores de cada relacion se unieron extremo con extremo hasta
+     cerrar el anillo de cada municipio.
+  2. Los poligonos se simplificaron con Ramer-Douglas-Peucker (tolerancia 0.0004
+     grados, ~44 m): de 33,186 a 5,942 vertices, sin cambio visible de forma.
+  3. Se verifico que los 36 nombres correspondan uno a uno con los del DENUE.
+     Dos requirieron alias por diferencia de nomenclatura: Jonacatepec ->
+     Jonacatepec de Leandro Valle, y Zacualpan -> Zacualpan de Amilpas.
+
+Advertencia sobre las coordenadas del DENUE:
+  Al dibujar los establecimientos se detectaron 4 registros (de 113,066) con
+  coordenadas fuera de Morelos: un negocio de Jojutla ubicado en Baja California
+  Sur, uno de Jiutepec en Campeche, uno de Cuernavaca en Coahuila y uno de
+  Tlalnepantla en la Ciudad de Mexico. Son errores de captura del propio DENUE.
+  No afectan al modelo, que nunca usa coordenadas, y se excluyen unicamente de la
+  capa de puntos del mapa interactivo.
+
+Cita sugerida:
+  OpenStreetMap contributors (2026). Limites municipales del estado de Morelos.
+  Consultado en agosto de 2026 mediante la Overpass API. Datos disponibles bajo
+  la Open Database License. https://www.openstreetmap.org/copyright
+
+5. ARCHIVOS DERIVADOS
 
 Todos estos archivos los produce notebook/analisis_datos_publicos.ipynb a partir
 del archivo de la seccion 2. Se incluyen como evidencia del proceso; ninguno es
@@ -129,7 +171,7 @@ un dato de entrada.
   imagenes/grafica_1..6_*.png           las seis graficas del analisis
 
 
-5. CONDICIONES DE USO Y CITA
+6. CONDICIONES DE USO Y CITA
 
 La informacion del INEGI se publica bajo los Terminos de Libre Uso de la
 Informacion del INEGI, que permiten reproducirla y redistribuirla de forma libre
@@ -149,7 +191,7 @@ en el analisis ni avala sus conclusiones: la interpretacion de los resultados es
 responsabilidad exclusiva del equipo.
 
 
-6. FUENTES CONSIDERADAS Y NO UTILIZADAS
+7. FUENTES CONSIDERADAS Y NO UTILIZADAS
 
 Se dejan anotadas porque explican los limites del analisis y porque son el
 camino natural para continuarlo (ver "Trabajo futuro", seccion 17 del notebook):
